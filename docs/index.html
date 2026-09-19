@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Хроника — текстовая RPG</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ЭКРАН: КЛЮЧ -->
+  <section class="screen" id="screen-key" hidden>
+    <div class="menu menu-wide">
+      <h1 class="title">Хроника<span class="title-thin">текстовая RPG</span></h1>
+      <p class="tagline">
+        Ты придумываешь мир и персонажа, нейросеть рассказывает, что с ними происходит.
+        Играть бесплатно, но нужен собственный ключ Gemini — игра обращается к нему
+        напрямую из твоего браузера.
+      </p>
+
+      <div class="code-box">
+        <input class="code-input code-input-wide" id="key-input" type="password"
+               placeholder="вставь сюда ключ" autocomplete="off" spellcheck="false">
+        <button class="btn btn-main" data-action="key-submit">Начать</button>
+      </div>
+
+      <div class="menu-buttons menu-buttons-tight">
+        <button class="btn btn-quiet" data-action="key-back" id="key-back" hidden>Назад</button>
+      </div>
+
+      <div class="notice" id="key-error" hidden></div>
+
+      <div class="key-help">
+        <h3>Где взять ключ</h3>
+        <ol class="steps">
+          <li>Открыть
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+            и войти в обычный аккаунт Google.</li>
+          <li>Нажать «Create API key».</li>
+          <li>Скопировать строку и вставить её в поле выше.</li>
+        </ol>
+        <p class="hint">
+          Это бесплатно и занимает пару минут. Ключ хранится только в твоём браузере:
+          никуда не отправляется и никому, включая владельца сайта, не виден.
+          Спрашивается один раз — дальше игра помнит его сама.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН: ГЛАВНОЕ МЕНЮ -->
+  <section class="screen" id="screen-menu" hidden>
+    <div class="menu">
+      <h1 class="title">Хроника<span class="title-thin">без названия</span></h1>
+      <p class="tagline">Текстовая ролевая игра. Мир придумываешь ты — остальное расскажет она.</p>
+
+      <div class="menu-buttons">
+        <button class="btn btn-main" data-action="new-game">Новая игра</button>
+        <button class="btn" data-action="continue" id="menu-continue" disabled>Продолжить</button>
+        <button class="btn" data-action="load" id="menu-load" disabled>Загрузить</button>
+        <button class="btn" data-action="models" id="menu-models">Выбор модели</button>
+        <button class="btn btn-quiet" data-action="key-screen" id="menu-key">Ввести свой ключ</button>
+      </div>
+
+      <div class="model-line">Модель: <span id="menu-model">—</span></div>
+      <div class="notice" id="menu-error" hidden></div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН: ВЫБОР МОДЕЛИ -->
+  <section class="screen" id="screen-models" hidden>
+    <div class="panel">
+      <h2>Выбор модели</h2>
+      <p class="hint">Flash-Lite быстрые и дешёвые. Если какая-то недоступна по ключу — выбери другую.</p>
+      <div id="model-list" class="model-list"></div>
+      <div class="row-buttons">
+        <button class="btn" data-action="back-menu">Назад</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН: СОЗДАНИЕ МИРА -->
+  <section class="screen" id="screen-new" hidden>
+    <div class="panel">
+      <h2>Новая игра</h2>
+
+      <label class="field">
+        <span class="field-label">Мир</span>
+        <span class="field-hint">Где всё происходит. Одно предложение или целая страница — как хочешь. Можно оставить пустым.</span>
+        <textarea id="input-world" rows="5" placeholder="Например: заброшенные болота, где полвека назад упал корабль пришельцев, и теперь вода светится, а люди в окрестных деревнях рождаются с лишними пальцами."></textarea>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Персонаж</span>
+        <span class="field-hint">Кто ты в этом мире. Имя, ремесло, прошлое, слабости.</span>
+        <textarea id="input-character" rows="5" placeholder="Например: бывший фельдшер, которого выгнали из города за незаконные вскрытия. Хромает после встречи с медведем, носит с собой отцовский нож."></textarea>
+      </label>
+
+      <div class="row-buttons">
+        <button class="btn btn-main" data-action="generate">Создать мир</button>
+        <button class="btn" data-action="back-menu">Назад</button>
+      </div>
+      <div class="notice" id="new-error" hidden></div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН: ОЖИДАНИЕ -->
+  <section class="screen" id="screen-loading" hidden>
+    <div class="loading">
+      <div class="spinner"></div>
+      <p id="loading-text">Мир собирается по кускам…</p>
+    </div>
+  </section>
+
+  <!-- ЭКРАН: КАРТОЧКА МИРА -->
+  <section class="screen" id="screen-world" hidden>
+    <div class="panel panel-wide">
+      <header class="world-head">
+        <h2 id="world-title"></h2>
+        <span class="genre" id="world-genre"></span>
+      </header>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-top"><span>Здоровье</span><span id="stat-health-num"></span></div>
+          <div class="bar"><div class="bar-fill bar-health" id="stat-health-bar"></div></div>
+        </div>
+        <div class="stat">
+          <div class="stat-top"><span>Усталость</span><span id="stat-fatigue-num"></span></div>
+          <div class="bar"><div class="bar-fill bar-fatigue" id="stat-fatigue-bar"></div></div>
+        </div>
+      </div>
+
+      <h3>Предыстория</h3>
+      <div class="prose" id="world-backstory"></div>
+
+      <h3>Законы мира</h3>
+      <ul class="list" id="world-rules"></ul>
+
+      <div class="two-cols">
+        <div>
+          <h3>Персонаж</h3>
+          <p class="char-name" id="char-name"></p>
+          <div class="prose" id="char-background"></div>
+          <div class="tags" id="char-traits"></div>
+          <p class="goal"><span class="goal-label">Чего он хочет:</span> <span id="char-goal"></span></p>
+        </div>
+        <div>
+          <h3>Инвентарь</h3>
+          <ul class="list" id="world-inventory"></ul>
+          <h3>Место</h3>
+          <p class="char-name" id="loc-name"></p>
+          <div class="prose" id="loc-description"></div>
+        </div>
+      </div>
+
+      <h3>Начало</h3>
+      <div class="prose scene" id="world-opening"></div>
+
+      <div class="suggestions" id="world-actions"></div>
+
+      <div class="row-buttons">
+        <button class="btn btn-main" data-action="play">Начать игру</button>
+        <button class="btn" data-action="regenerate">Перегенерировать</button>
+        <button class="btn btn-quiet" data-action="back-menu">В меню</button>
+      </div>
+      <div class="notice" id="world-error" hidden></div>
+      <div class="usage" id="usage-line"></div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН: ИГРА -->
+  <section class="screen screen-game" id="screen-game" hidden>
+    <div class="game">
+
+      <header class="hud">
+        <div class="hud-place">
+          <span class="hud-location" id="hud-location"></span>
+          <span class="hud-time" id="hud-time"></span>
+        </div>
+        <div class="hud-stats">
+          <div class="stat">
+            <div class="stat-top">
+              <span>Здоровье <i class="stat-hint" id="hud-health-hint"></i></span>
+              <span id="hud-health-num"></span>
+            </div>
+            <div class="bar"><div class="bar-fill bar-health" id="hud-health-bar"></div></div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <span>Усталость <i class="stat-hint" id="hud-fatigue-hint"></i></span>
+              <span id="hud-fatigue-num"></span>
+            </div>
+            <div class="bar"><div class="bar-fill bar-fatigue" id="hud-fatigue-bar"></div></div>
+          </div>
+        </div>
+        <div class="npc-row" id="hud-npcs" hidden></div>
+      </header>
+
+      <div class="log" id="game-log"></div>
+
+      <div class="thinking" id="game-thinking" hidden>
+        <span class="dots"><i></i><i></i><i></i></span> ведущий обдумывает ход…
+      </div>
+
+      <div class="notice" id="game-error" hidden></div>
+
+      <div class="game-over" id="game-over" hidden>
+        <h3>История окончена</h3>
+        <p>Персонаж не пережил этого. Сохранения целы — можно вернуться к любому из них.</p>
+        <div class="row-buttons row-center">
+          <button class="btn btn-main" data-action="load">Загрузить сохранение</button>
+          <button class="btn" data-action="back-menu">В главное меню</button>
+        </div>
+      </div>
+
+      <div class="composer" id="composer">
+        <div class="suggestions" id="game-actions"></div>
+        <textarea id="game-input" rows="2" placeholder="Что ты делаешь или говоришь?"></textarea>
+        <div class="composer-row">
+          <span class="hint" id="game-hint">Ctrl+Enter — отправить</span>
+          <button class="btn btn-main" data-action="act">Действовать</button>
+        </div>
+      </div>
+
+      <footer class="game-foot">
+        <span class="usage" id="game-usage"></span>
+        <span class="foot-buttons">
+          <button class="btn" data-action="journal">Журнал</button>
+          <button class="btn" data-action="saves">Сохранить</button>
+          <button class="btn btn-quiet" data-action="back-menu">В меню</button>
+        </span>
+      </footer>
+
+      <!-- Запас прокрутки: без него начало нового хода не поднять к верху экрана. -->
+      <div class="tail"></div>
+
+    </div>
+  </section>
+
+  <!-- ЭКРАН: БОЙ -->
+  <section class="screen screen-game" id="screen-combat" hidden>
+    <div class="game combat">
+
+      <div class="combat-head">
+        <span class="combat-mark">Бой</span>
+        <span class="combat-round" id="combat-round"></span>
+      </div>
+
+      <div class="prose scene" id="combat-opening"></div>
+
+      <div class="fighters">
+        <div class="fighter fighter-enemy">
+          <div class="fighter-top">
+            <span class="fighter-name" id="combat-enemy-name"></span>
+            <span class="fighter-hp" id="combat-enemy-hp"></span>
+          </div>
+          <div class="bar"><div class="bar-fill bar-enemy" id="combat-enemy-bar"></div></div>
+          <div class="fighter-stats">
+            <span>урон <b id="combat-enemy-atk"></b></span>
+            <span>защита <b id="combat-enemy-def"></b></span>
+          </div>
+          <div class="fighter-desc" id="combat-enemy-desc"></div>
+        </div>
+
+        <div class="fighter fighter-player">
+          <div class="fighter-top">
+            <span class="fighter-name">Ты</span>
+            <span class="fighter-hp" id="combat-player-hp"></span>
+          </div>
+          <div class="bar"><div class="bar-fill bar-health" id="combat-player-bar"></div></div>
+          <div class="fighter-stats">
+            <span>урон <b id="combat-player-atk"></b></span>
+            <span>защита <b id="combat-player-def"></b></span>
+          </div>
+          <div class="fighter-desc" id="combat-player-weapon"></div>
+        </div>
+      </div>
+
+      <blockquote class="enemy-line" id="combat-line" hidden></blockquote>
+
+      <div class="combat-log" id="combat-log"></div>
+
+      <div class="combat-actions" id="combat-actions">
+        <button class="btn btn-main" data-action="hit">Атака</button>
+        <button class="btn" data-action="guard">Защита</button>
+        <button class="btn" data-action="use-item" id="combat-item">Предмет</button>
+        <button class="btn btn-quiet" data-action="run">Бегство</button>
+      </div>
+
+      <div class="combat-end" id="combat-end" hidden>
+        <p id="combat-outcome"></p>
+        <button class="btn btn-main" data-action="combat-finish">Что было дальше</button>
+        <button class="btn btn-quiet" data-action="load">Загрузить сохранение</button>
+      </div>
+
+      <div class="notice" id="combat-error" hidden></div>
+    </div>
+  </section>
+
+  <!-- ОКНО: ЖУРНАЛ -->
+  <div class="overlay" id="journal" hidden>
+    <div class="sheet">
+      <header class="sheet-head">
+        <h2 id="journal-title"></h2>
+        <button class="sheet-close" data-action="journal-close" title="Закрыть">×</button>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab tab-active" data-tab="character">Персонаж</button>
+        <button class="tab" data-tab="inventory">Инвентарь</button>
+        <button class="tab" data-tab="people">Знакомые</button>
+      </nav>
+
+      <div class="tab-body" id="tab-character">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-top"><span>Здоровье</span><span id="j-health-num"></span></div>
+            <div class="bar"><div class="bar-fill bar-health" id="j-health-bar"></div></div>
+          </div>
+          <div class="stat">
+            <div class="stat-top"><span>Усталость</span><span id="j-fatigue-num"></span></div>
+            <div class="bar"><div class="bar-fill bar-fatigue" id="j-fatigue-bar"></div></div>
+          </div>
+        </div>
+
+        <dl class="facts" id="j-facts"></dl>
+
+        <h3>Кто ты</h3>
+        <div class="prose" id="j-background"></div>
+        <div class="tags" id="j-traits"></div>
+        <p class="goal"><span class="goal-label">Цель:</span> <span id="j-goal"></span></p>
+
+        <h3>Что уже случилось</h3>
+        <ul class="list chronicle" id="j-chronicle"></ul>
+      </div>
+
+      <div class="tab-body" id="tab-inventory" hidden>
+        <ul class="list" id="j-inventory"></ul>
+      </div>
+
+      <div class="tab-body" id="tab-people" hidden>
+        <p class="hint" id="j-people-hint"></p>
+        <div class="people" id="j-people"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОКНО: СОХРАНЕНИЯ -->
+  <div class="overlay" id="saves" hidden>
+    <div class="sheet">
+      <header class="sheet-head">
+        <h2 id="saves-title">Сохранения</h2>
+        <button class="sheet-close" data-action="saves-close" title="Закрыть">×</button>
+      </header>
+      <p class="hint" id="saves-hint"></p>
+      <div class="slots" id="saves-list"></div>
+      <div class="row-buttons">
+        <button class="btn btn-quiet" data-action="saves-import">Загрузить из файла</button>
+      </div>
+      <p class="hint">
+        Сохранения лежат в этом браузере. Чистка истории и данных сайтов их сотрёт —
+        важную партию забери кнопкой «В файл».
+      </p>
+      <input type="file" id="saves-file" accept="application/json,.json" hidden>
+      <div class="notice" id="saves-error" hidden></div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="js/ui.js"></script>
+</body>
+</html>
