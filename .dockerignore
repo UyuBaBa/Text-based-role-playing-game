@@ -1,0 +1,22 @@
+# Ключ остаётся у тебя: на хостинге он задаётся переменной окружения.
+.env
+.env.*
+!.env.example
+
+# В файле задачи ключ открытым текстом — в образ ему тоже нельзя
+Описание задачи.txt
+
+# Локальное, серверу не нужное
+saves/
+logs/
+tools/
+__pycache__/
+*.pyc
+.venv/
+venv/
+scripts/
+README.md
+Dockerfile
+.dockerignore
+.git/
+.gitignore
