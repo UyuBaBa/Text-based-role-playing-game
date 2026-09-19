@@ -60,6 +60,9 @@ body {
   margin-top: 10px;
 }
 
+.tagline a { color: var(--accent); }
+.tagline a:hover { color: #e0a06a; }
+
 .tagline {
   color: var(--ink-dim);
   font-size: 15px;
@@ -93,8 +96,32 @@ body {
   text-align: center;
   padding: 11px 14px;
 }
+.code-input-wide { width: 280px; letter-spacing: 0.08em; font-size: 15px; }
 .code-input:focus { outline: none; border-color: var(--accent-soft); }
 .code-input::placeholder { color: #554e46; letter-spacing: 0.1em; }
+
+.menu-buttons-tight { margin-bottom: 12px; gap: 6px; }
+.menu-wide { max-width: 620px; }
+
+/* Подсказка про ключ на первом экране */
+.key-help {
+  margin-top: 34px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.key-help h3 { margin-top: 0; }
+.key-help .hint { margin: 14px 0 0; }
+
+.steps {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--ink-dim);
+  font-size: 15px;
+}
+.steps li { margin-bottom: 8px; }
+.steps a { color: var(--accent); }
+.steps a:hover { color: #e0a06a; }
 
 .model-line {
   color: var(--ink-faint);

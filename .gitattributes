@@ -1,0 +1,7 @@
+# Скрипты и Dockerfile обязаны остаться с LF: с CRLF Linux их не запустит.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf

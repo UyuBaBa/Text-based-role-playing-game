@@ -3,15 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Текстовая RPG</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <title>Хроника — текстовая RPG</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="app">
 
+  <!-- ЭКРАН: КЛЮЧ -->
+  <section class="screen" id="screen-key" hidden>
+    <div class="menu menu-wide">
+      <h1 class="title">Хроника<span class="title-thin">текстовая RPG</span></h1>
+      <p class="tagline">
+        Ты придумываешь мир и персонажа, нейросеть рассказывает, что с ними происходит.
+        Играть бесплатно, но нужен собственный ключ Gemini — игра обращается к нему
+        напрямую из твоего браузера.
+      </p>
+
+      <div class="code-box">
+        <input class="code-input code-input-wide" id="key-input" type="password"
+               placeholder="вставь сюда ключ" autocomplete="off" spellcheck="false">
+        <button class="btn btn-main" data-action="key-submit">Начать</button>
+      </div>
+
+      <div class="menu-buttons menu-buttons-tight">
+        <button class="btn btn-quiet" data-action="key-back" id="key-back" hidden>Назад</button>
+      </div>
+
+      <div class="notice" id="key-error" hidden></div>
+
+      <div class="key-help">
+        <h3>Где взять ключ</h3>
+        <ol class="steps">
+          <li>Открыть
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+            и войти в обычный аккаунт Google.</li>
+          <li>Нажать «Create API key».</li>
+          <li>Скопировать строку и вставить её в поле выше.</li>
+        </ol>
+        <p class="hint">
+          Это бесплатно и занимает пару минут. Ключ хранится только в твоём браузере:
+          никуда не отправляется и никому, включая владельца сайта, не виден.
+          Спрашивается один раз — дальше игра помнит его сама.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- ЭКРАН: ГЛАВНОЕ МЕНЮ -->
-  <section class="screen" id="screen-menu">
+  <section class="screen" id="screen-menu" hidden>
     <div class="menu">
       <h1 class="title">Хроника<span class="title-thin">без названия</span></h1>
       <p class="tagline">Текстовая ролевая игра. Мир придумываешь ты — остальное расскажет она.</p>
@@ -21,27 +61,11 @@
         <button class="btn" data-action="continue" id="menu-continue" disabled>Продолжить</button>
         <button class="btn" data-action="load" id="menu-load" disabled>Загрузить</button>
         <button class="btn" data-action="models" id="menu-models">Выбор модели</button>
-        <button class="btn btn-quiet" data-action="quit">Выход</button>
+        <button class="btn btn-quiet" data-action="key-screen" id="menu-key">Ввести свой ключ</button>
       </div>
 
-      <div class="model-line">
-        Модель: <span id="menu-model">—</span>
-      </div>
+      <div class="model-line">Модель: <span id="menu-model">—</span></div>
       <div class="notice" id="menu-error" hidden></div>
-    </div>
-  </section>
-
-  <!-- ЭКРАН: КОД ДОСТУПА -->
-  <section class="screen" id="screen-code" hidden>
-    <div class="menu">
-      <h1 class="title">Хроника<span class="title-thin">вход</span></h1>
-      <p class="tagline">Игру открыл кто-то из знакомых. Введи код, который он дал.</p>
-      <div class="code-box">
-        <input class="code-input" id="code-input" maxlength="32" placeholder="код"
-               autocomplete="off" spellcheck="false">
-        <button class="btn btn-main" data-action="send-code">Войти</button>
-      </div>
-      <div class="notice" id="code-error" hidden></div>
     </div>
   </section>
 
@@ -49,7 +73,7 @@
   <section class="screen" id="screen-models" hidden>
     <div class="panel">
       <h2>Выбор модели</h2>
-      <p class="hint">Список берётся из твоего ключа: показаны только реально доступные модели.</p>
+      <p class="hint">Flash-Lite быстрые и дешёвые. Если какая-то недоступна по ключу — выбери другую.</p>
       <div id="model-list" class="model-list"></div>
       <div class="row-buttons">
         <button class="btn" data-action="back-menu">Назад</button>
@@ -136,7 +160,6 @@
       <div class="prose scene" id="world-opening"></div>
 
       <div class="suggestions" id="world-actions"></div>
-      <p class="hint hint-center">Ходы появятся на следующем этапе — пока это только завязка.</p>
 
       <div class="row-buttons">
         <button class="btn btn-main" data-action="play">Начать игру</button>
@@ -174,7 +197,6 @@
           </div>
         </div>
         <div class="npc-row" id="hud-npcs" hidden></div>
-        <div class="table-row" id="hud-players" hidden></div>
       </header>
 
       <div class="log" id="game-log"></div>
@@ -199,11 +221,7 @@
         <textarea id="game-input" rows="2" placeholder="Что ты делаешь или говоришь?"></textarea>
         <div class="composer-row">
           <span class="hint" id="game-hint">Ctrl+Enter — отправить</span>
-          <span class="composer-right">
-            <input class="name-input" id="player-name" maxlength="40" hidden
-                   placeholder="твоё имя" title="Видно остальным игрокам">
-            <button class="btn btn-main" data-action="act">Действовать</button>
-          </span>
+          <button class="btn btn-main" data-action="act">Действовать</button>
         </div>
       </div>
 
@@ -221,67 +239,6 @@
 
     </div>
   </section>
-
-  <!-- ОКНО: ЖУРНАЛ -->
-  <div class="overlay" id="journal" hidden>
-    <div class="sheet">
-      <header class="sheet-head">
-        <h2 id="journal-title"></h2>
-        <button class="sheet-close" data-action="journal-close" title="Закрыть">×</button>
-      </header>
-
-      <nav class="tabs">
-        <button class="tab tab-active" data-tab="character">Персонаж</button>
-        <button class="tab" data-tab="inventory">Инвентарь</button>
-        <button class="tab" data-tab="people">Знакомые</button>
-      </nav>
-
-      <div class="tab-body" id="tab-character">
-        <div class="stats">
-          <div class="stat">
-            <div class="stat-top"><span>Здоровье</span><span id="j-health-num"></span></div>
-            <div class="bar"><div class="bar-fill bar-health" id="j-health-bar"></div></div>
-          </div>
-          <div class="stat">
-            <div class="stat-top"><span>Усталость</span><span id="j-fatigue-num"></span></div>
-            <div class="bar"><div class="bar-fill bar-fatigue" id="j-fatigue-bar"></div></div>
-          </div>
-        </div>
-
-        <dl class="facts" id="j-facts"></dl>
-
-        <h3>Кто ты</h3>
-        <div class="prose" id="j-background"></div>
-        <div class="tags" id="j-traits"></div>
-        <p class="goal"><span class="goal-label">Цель:</span> <span id="j-goal"></span></p>
-
-        <h3>Что уже случилось</h3>
-        <ul class="list chronicle" id="j-chronicle"></ul>
-      </div>
-
-      <div class="tab-body" id="tab-inventory" hidden>
-        <ul class="list" id="j-inventory"></ul>
-      </div>
-
-      <div class="tab-body" id="tab-people" hidden>
-        <p class="hint" id="j-people-hint"></p>
-        <div class="people" id="j-people"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ОКНО: СОХРАНЕНИЯ -->
-  <div class="overlay" id="saves" hidden>
-    <div class="sheet">
-      <header class="sheet-head">
-        <h2 id="saves-title">Сохранения</h2>
-        <button class="sheet-close" data-action="saves-close" title="Закрыть">×</button>
-      </header>
-      <p class="hint" id="saves-hint"></p>
-      <div class="slots" id="saves-list"></div>
-      <div class="notice" id="saves-error" hidden></div>
-    </div>
-  </div>
 
   <!-- ЭКРАН: БОЙ -->
   <section class="screen screen-game" id="screen-combat" hidden>
@@ -343,16 +300,77 @@
     </div>
   </section>
 
-  <!-- ЭКРАН: ВЫХОД -->
-  <section class="screen" id="screen-bye" hidden>
-    <div class="menu">
-      <h1 class="title">До встречи</h1>
-      <p class="tagline">Сервер остановлен. Эту вкладку можно закрыть.</p>
+  <!-- ОКНО: ЖУРНАЛ -->
+  <div class="overlay" id="journal" hidden>
+    <div class="sheet">
+      <header class="sheet-head">
+        <h2 id="journal-title"></h2>
+        <button class="sheet-close" data-action="journal-close" title="Закрыть">×</button>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab tab-active" data-tab="character">Персонаж</button>
+        <button class="tab" data-tab="inventory">Инвентарь</button>
+        <button class="tab" data-tab="people">Знакомые</button>
+      </nav>
+
+      <div class="tab-body" id="tab-character">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-top"><span>Здоровье</span><span id="j-health-num"></span></div>
+            <div class="bar"><div class="bar-fill bar-health" id="j-health-bar"></div></div>
+          </div>
+          <div class="stat">
+            <div class="stat-top"><span>Усталость</span><span id="j-fatigue-num"></span></div>
+            <div class="bar"><div class="bar-fill bar-fatigue" id="j-fatigue-bar"></div></div>
+          </div>
+        </div>
+
+        <dl class="facts" id="j-facts"></dl>
+
+        <h3>Кто ты</h3>
+        <div class="prose" id="j-background"></div>
+        <div class="tags" id="j-traits"></div>
+        <p class="goal"><span class="goal-label">Цель:</span> <span id="j-goal"></span></p>
+
+        <h3>Что уже случилось</h3>
+        <ul class="list chronicle" id="j-chronicle"></ul>
+      </div>
+
+      <div class="tab-body" id="tab-inventory" hidden>
+        <ul class="list" id="j-inventory"></ul>
+      </div>
+
+      <div class="tab-body" id="tab-people" hidden>
+        <p class="hint" id="j-people-hint"></p>
+        <div class="people" id="j-people"></div>
+      </div>
     </div>
-  </section>
+  </div>
+
+  <!-- ОКНО: СОХРАНЕНИЯ -->
+  <div class="overlay" id="saves" hidden>
+    <div class="sheet">
+      <header class="sheet-head">
+        <h2 id="saves-title">Сохранения</h2>
+        <button class="sheet-close" data-action="saves-close" title="Закрыть">×</button>
+      </header>
+      <p class="hint" id="saves-hint"></p>
+      <div class="slots" id="saves-list"></div>
+      <div class="row-buttons">
+        <button class="btn btn-quiet" data-action="saves-import">Загрузить из файла</button>
+      </div>
+      <p class="hint">
+        Сохранения лежат в этом браузере. Чистка истории и данных сайтов их сотрёт —
+        важную партию забери кнопкой «В файл».
+      </p>
+      <input type="file" id="saves-file" accept="application/json,.json" hidden>
+      <div class="notice" id="saves-error" hidden></div>
+    </div>
+  </div>
 
 </div>
 
-<script src="/static/app.js"></script>
+<script type="module" src="js/ui.js"></script>
 </body>
 </html>
